@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/spartacusX/ftp/util"
 	"net"
-	"time"
 )
 
 func main() {
@@ -48,7 +47,7 @@ func main() {
 		// Todo		Process server response
 
 		// Close connection since server said "Bye"
-		if res == "Bye" {
+		if res == "bye" {
 			return
 		}
 	}

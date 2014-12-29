@@ -3,8 +3,10 @@ package main
 import (
 	"fmt"
 	"github.com/spartacusX/ftp/util"
+	"log"
 	"net"
-	"strconv"
+	"os"
+	"strings"
 )
 
 var clients map[net.Conn]int
@@ -53,21 +55,34 @@ func ConnHandler(conn net.Conn) {
 	for {
 		cmd, err := util.ReceiveData(conn)
 		if err != nil {
-			continue
+			return
 		}
 
-		switch cmd {
-		case "1":
-			util.SendData(conn, "Sign in successfully!")
-		case "2":
-			util.SendData(conn, "Sign up successfully!")
-		case "3":
-			util.SendData(conn, strconv.Itoa(len(clients)))
-		case "4":
-			util.SendData(conn, "Sign out successfully!")
-		case "5":
-			util.SendData(conn, "Bye")
+		cmdName, cmdArgs := ParseCmd(cmd)
+		switch cmdName {
+		case "append":
+			util.SendData(conn, "append mode")
+		case "ascii":
+			util.SendData(conn, "ascii mode")
+		case "bell":
+			util.SendData(conn, "bell mode")
+		case "binary":
+			util.SendData(conn, "binary mode")
+		case "bye":
+			util.SendData(conn, "bye")
 			return
+		case "cd":
+			err = os.Chdir(cmdArgs[0])
+			if err != nil {
+				log.Println(err.Error())
+			}
+		case "close":
+			util.SendData(conn, "bye")
+			return
+		case "delete":
+			// Delete file
+		case "help":
+			DisplayCmdList(conn)
 		default:
 			util.SendData(conn, "Invalid command!")
 		}
@@ -75,6 +90,12 @@ func ConnHandler(conn net.Conn) {
 }
 
 func DisplayCmdList(conn net.Conn) (err error) {
-	strCmd := "1.Sign In\n2.Sign Up\n3.ClientCount\n4.Sign Out\n5.Bye"
+	strCmd := `append    ascii    bell    binary    bye    cd    close    delete    help
+	ls        put      get     lcd       mls    rmdir rename   mkdir     status`
 	return util.SendData(conn, strCmd)
+}
+
+func ParseCmd(cmd string) (cmdName string, args []string) {
+	command := strings.Split(cmd, " ")
+	return command[0], command[1:]
 }
