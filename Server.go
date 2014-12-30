@@ -90,12 +90,11 @@ func ConnHandler(conn net.Conn) {
 }
 
 func DisplayCmdList(conn net.Conn) (err error) {
-	strCmd := `append    ascii    bell    binary    bye    cd    close    delete    help
-	ls        put      get     lcd       mls    rmdir rename   mkdir     status`
+	strCmd := "append ascii bell binary bye close delete help put get mls status lcd rcd lls rls rrmdir lrmdir rrename lrrename rmkdir lmkdir"
 	return util.SendData(conn, strCmd)
 }
 
-func ParseCmd(cmd string) (cmdName string, args []string) {
+func ParseCmd(cmd string) (Name string, args []string) {
 	command := strings.Split(cmd, " ")
 	return command[0], command[1:]
 }
