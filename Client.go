@@ -7,12 +7,13 @@ import (
 	"github.com/spartacusX/ftp/util"
 	"net"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 )
 
 const (
-	CMD_UNKNOWN = iota
+	CMD_UNKNOWN = iota // 0
 	CMD_LOCAL
 	CMD_REMOTE
 )
@@ -53,7 +54,7 @@ func main() {
 			cmd := scanner.Text()
 
 			if ProcessCmd(conn, cmd) == true { // exit
-				return
+				break
 			}
 		}
 	}
@@ -61,18 +62,17 @@ func main() {
 
 func ProcessCmd(conn net.Conn, cmd string) (bExit bool) {
 	bExit = false
-	if cmdType, cmdName, cmdArgs := ParseCmd(cmd); cmdType != CMD_UNKNOWN {
-		if cmdType == CMD_LOCAL {
-			ProcessLocalCmd(cmdName, cmdArgs)
-		} else if cmdType == CMD_REMOTE {
-			if err := ForwordRemoteCmd(conn, cmd); err != nil {
-				bExit = true
-				fmt.Println(err.Error())
-			}
-		} else {
-			fmt.Println("Invalid command!")
+	cmdType, cmdName, cmdArgs := ParseCmd(cmd)
+	switch cmdType {
+	case CMD_LOCAL:
+		ProcessLocalCmd(cmdName, cmdArgs)
+	case CMD_REMOTE:
+		if err := ForwordRemoteCmd(conn, cmd); err != nil {
+			bExit = true
+			fmt.Println(err.Error())
 		}
-
+	case CMD_UNKNOWN:
+		fmt.Println("Invalid command, nothing to do.")
 	}
 
 	return bExit
@@ -104,7 +104,7 @@ func ParseCmd(strCmd string) (cmdType int, cmdName string, cmdArgs []string) {
 		if strCmdName == cmd {
 			cmdName = strCmdName
 			cmdArgs = slArgs
-			if strCmdName == "help" || strCmdName == "lcd" {
+			if strCmdName == "help" || strCmdName[0] == 'l' {
 				cmdType = CMD_LOCAL
 			} else {
 				cmdType = CMD_REMOTE
@@ -124,8 +124,13 @@ func ProcessLocalCmd(cmdName string, cmdArgs []string) (err error) {
 		if err == nil {
 			strCurrentDir = cmdArgs[0]
 		}
-	case "ldir":
-		fmt.Println(strCurrentDir)
+	case "lls":
+		out, err := exec.Command("cmd", "dir c:\\home").Output()
+		if err == nil {
+			fmt.Printf("lls: \n%s\n", out)
+		} else {
+			fmt.Println("lls failed, error: ", err.Error())
+		}
 	default:
 		fmt.Println("Unknown local command")
 	}

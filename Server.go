@@ -9,6 +9,9 @@ import (
 	"strings"
 )
 
+const commands = "append ascii bell binary bye close delete help put get mls status " +
+	"lcd rcd lls rls rrmdir lrmdir rrename lrrename rmkdir lmkdir"
+
 var clients map[net.Conn]int
 
 func main() {
@@ -47,8 +50,7 @@ func ConnHandler(conn net.Conn) {
 	defer DeleteClient(conn)
 	defer fmt.Println("Connection closed from: ", conn.RemoteAddr().String())
 
-	err := DisplayCmdList(conn)
-	if err != nil {
+	if err := DisplayCmdList(conn); err != nil {
 		return
 	}
 
@@ -90,8 +92,7 @@ func ConnHandler(conn net.Conn) {
 }
 
 func DisplayCmdList(conn net.Conn) (err error) {
-	strCmd := "append ascii bell binary bye close delete help put get mls status lcd rcd lls rls rrmdir lrmdir rrename lrrename rmkdir lmkdir"
-	return util.SendData(conn, strCmd)
+	return util.SendData(conn, commands)
 }
 
 func ParseCmd(cmd string) (Name string, args []string) {
